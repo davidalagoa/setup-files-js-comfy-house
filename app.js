@@ -85,7 +85,9 @@ class UI {
 
                 // display cart item
                 this.addCartItem(cartItem)
-                    // show the cart
+
+                // show the cart
+                this.showCart();
             });
         });
     }
@@ -116,7 +118,55 @@ class UI {
                         <i class="fas fa-chevron-down" data-id=${item.id}></i>
                     </div>`;
         cartContent.appendChild(div);
-        console.log(cartContent);
+    }
+
+    showCart() {
+        cartOverlay.classList.add('transparentBcg');
+        cartDOM.classList.add('showCart');
+    }
+
+    setupAPP() {
+        cart = Storage.getCart();
+        this.setCartValues(cart);
+        this.populateCart(cart);
+        cartBtn.addEventListener('click', this.showCart);
+        closeCartBtn.addEventListener('click', this.hideCart);
+    }
+
+    populateCart(cart) {
+        cart.forEach(item => this.addCartItem(item));
+    }
+
+    hideCart() {
+        cartOverlay.classList.remove('transparentBcg');
+        cartDOM.classList.remove('showCart');
+    }
+
+    cartLogic() {
+        // clear cart button
+        clearCartBtn.addEventListener('click', () => {
+            this.clearCart();
+        });
+
+        // cart functionality
+    }
+
+    clearCart() {
+        let cartItems = cart.map(item => item.id);
+        cartItems.forEach(id => this.removeItem(id));
+    }
+
+    removeItem(id) {
+        cart = cart.filter(item => item.id !== id);
+        this.setCartValues(cart);
+        Storage.saveCart(cart);
+        let button = this.getSingleButton(id);
+        button.disabled = false;
+        button.innerHTML = `<i c;ass="fas fa-shopping-cart></i>add to cart`;
+    }
+
+    getSingleButton(id) {
+        return buttonsDOM.find(button => button.dataset.id === id);
     }
 
 };
@@ -135,11 +185,18 @@ class Storage {
     static saveCart(cart) {
         localStorage.setItem('cart', JSON.stringify(cart));
     }
+
+    static getCart() {
+        return localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [];
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     const ui = new UI();
     const products = new Products();
+
+    // setup app
+    ui.setupAPP();
 
     // get all products
     products.getProducts().then(products => {
@@ -147,6 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
         Storage.saveProducts(products);
     }).then(() => {
         ui.getBagButtons();
+        ui.cartLogic();
     });
 
 });
